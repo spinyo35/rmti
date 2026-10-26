@@ -1,6 +1,6 @@
 # Microsoft Foundry agent prompts
 
-These are the versioned system instructions for the six portal-defined agents in `FINAL_PLAN.md`. Create each agent in Microsoft Foundry with the exact name below, the `gpt-4.1-mini` deployment, and temperature `0.4`; paste the matching prompt file contents as its instructions.
+These are the versioned system instructions for the six agents invoked by the API. Create each agent in Microsoft Foundry with the exact name below, then paste the matching prompt file contents as its instructions. Configure a model deployment supported by the Foundry project Responses API in the project.
 
 | Foundry agent name | Prompt file | Output purpose |
 |---|---|---|
