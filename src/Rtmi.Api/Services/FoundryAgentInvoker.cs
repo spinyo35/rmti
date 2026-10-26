@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Azure.AI.Extensions.OpenAI;
 using Azure.AI.Projects;
 using Azure.Core;
@@ -7,7 +8,10 @@ using OpenAI.Responses;
 namespace Rtmi.Api.Services;
 
 #pragma warning disable OPENAI001
-public sealed class FoundryAgentInvoker(IConfiguration configuration, TokenCredential credential) : IFoundryAgentInvoker
+public sealed class FoundryAgentInvoker(
+    IConfiguration configuration,
+    TokenCredential credential,
+    ILogger<FoundryAgentInvoker> logger) : IFoundryAgentInvoker
 {
     public bool IsConfigured => !string.IsNullOrWhiteSpace(configuration["Foundry:Endpoint"]);
 
@@ -50,6 +54,7 @@ public sealed class FoundryAgentInvoker(IConfiguration configuration, TokenCrede
         var timeoutSeconds = Math.Clamp(configuration.GetValue("Foundry:TimeoutSeconds", 45), 1, 120);
         timeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
+        var stopwatch = Stopwatch.StartNew();
         AIProjectClient projectClient = new(
             endpoint: endpoint,
             tokenProvider: credential);
@@ -71,6 +76,10 @@ public sealed class FoundryAgentInvoker(IConfiguration configuration, TokenCrede
         if (string.IsNullOrWhiteSpace(output))
             throw new InvalidOperationException($"Foundry agent '{agentName}' returned an empty response.");
 
+        logger.LogInformation(
+            "Foundry agent {AgentName} completed in {ElapsedMilliseconds} ms.",
+            agentName,
+            stopwatch.ElapsedMilliseconds);
         return output;
     }
 }

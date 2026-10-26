@@ -1,0 +1,46 @@
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "Rtmi.sln"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-api-production
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore Rtmi.sln
+
+      - name: Test
+        run: dotnet test Rtmi.sln --configuration Release --no-restore
+
+      - name: Publish API
+        run: dotnet publish src/Rtmi.Api/Rtmi.Api.csproj --configuration Release --no-restore --output publish
+
+      - name: Package API
+        run: cd publish && zip -r ../rtmi-api.zip .
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: rtmi-api.zip

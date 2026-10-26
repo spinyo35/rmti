@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity, ArrowDown, ArrowUpRight, BadgeCheck, BarChart3, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Clock3, Flame, Goal, LoaderCircle, Pause, Play, Radio,
+  CircleHelp, Clock3, Flame, Goal, LoaderCircle, Pause, Play, Radio, RefreshCw,
   RotateCcw, ShieldAlert, Sparkles, Target, Users, Video, Wifi, WifiOff,
   X,
 } from "lucide-react";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "framer-motion";
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
@@ -54,6 +54,8 @@ const initialState: MatchState = {
   momentum: { home: 0.5, away: 0.5 },
 };
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, "") ?? "";
+
 const fmtTime = (minute: number, second = 0) =>
   `${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
 
@@ -68,7 +70,7 @@ const iconFor = (type: EventType) => {
 };
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
@@ -86,6 +88,10 @@ function App() {
   const [persona, setPersona] = useState<Persona>("Casual");
   const [connection, setConnection] = useState<"connecting" | "connected" | "disconnected">("connecting");
   const [health, setHealth] = useState<HealthReport | null>(null);
+  const [healthError, setHealthError] = useState("");
+  const [healthUpdatedAt, setHealthUpdatedAt] = useState<Date | null>(null);
+  const [healthRefreshing, setHealthRefreshing] = useState(false);
+  const [scorePulse, setScorePulse] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [speed, setSpeed] = useState(30);
@@ -106,6 +112,21 @@ function App() {
   const playbackTimer = useRef<number | null>(null);
   const lastSampleScenario = useRef<string | null>(null);
   const chartRef = useRef<{ minute: number; home: number; away: number }[]>([]);
+  const previousScore = useRef({ home: initialState.home.score, away: initialState.away.score });
+  const prefersReducedMotion = useReducedMotion();
+
+  const refreshHealth = useCallback(async () => {
+    setHealthRefreshing(true);
+    try {
+      setHealth(await api<HealthReport>("/api/health"));
+      setHealthUpdatedAt(new Date());
+      setHealthError("");
+    } catch (reason) {
+      setHealthError(reason instanceof Error ? reason.message : "Could not refresh service health.");
+    } finally {
+      setHealthRefreshing(false);
+    }
+  }, []);
 
   const addEvent = useCallback((incoming: MatchEvent) => {
     setEvents((previous) => previous.some((event) => event.id === incoming.id)
@@ -130,14 +151,32 @@ function App() {
     setEvents(nextEvents);
     setInsights(nextInsights.reverse());
     setHealth(nextHealth);
+    setHealthUpdatedAt(new Date());
+    setHealthError("");
     chartRef.current = [{ minute: nextState.minute, home: nextState.momentum.home, away: nextState.momentum.away }];
   }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => void refreshHealth(), 30_000);
+    return () => window.clearInterval(timer);
+  }, [refreshHealth]);
+
+  useEffect(() => {
+    const scored = state.home.score > previousScore.current.home
+      || state.away.score > previousScore.current.away;
+    previousScore.current = { home: state.home.score, away: state.away.score };
+    if (!scored || prefersReducedMotion) return;
+
+    setScorePulse(true);
+    const timer = window.setTimeout(() => setScorePulse(false), 700);
+    return () => window.clearTimeout(timer);
+  }, [state.home.score, state.away.score, prefersReducedMotion]);
 
   useEffect(() => {
     let cancelled = false;
     const startHub = async () => {
       const hub = new HubConnectionBuilder()
-        .withUrl("/hubs/match")
+        .withUrl(`${apiBaseUrl}/hubs/match`)
         .withAutomaticReconnect()
         .configureLogging(LogLevel.Warning)
         .build();
@@ -158,7 +197,11 @@ function App() {
       hub.onreconnecting(() => setConnection("connecting"));
       hub.onreconnected(async () => {
         setConnection("connected");
-        await hub.invoke("SetPersona", personaRef.current).catch(() => undefined);
+        try {
+          await hub.invoke("SetPersona", personaRef.current);
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : "Could not restore the selected broadcast persona.");
+        }
       });
       hub.onclose(() => setConnection("disconnected"));
       try {
@@ -205,6 +248,10 @@ function App() {
   const visibleInsights = useMemo(() => insights.filter((insight) => insight.persona === persona), [insights, persona]);
   const statusLabel = state.status === "Live" ? "LIVE" : state.status === "FullTime" ? "FULL TIME" : state.status.toUpperCase();
   const foundryStatus = health?.foundry ?? "Checking";
+  const apiStatus = healthError
+    ? "Unverified"
+    : health?.api ?? (connection === "disconnected" ? "Unavailable" : "Checking");
+  const simulatorStatus = health?.simulator ?? "Checking";
   const isRunning = state.status === "Live";
 
   const command = async (name: string, path: string, method = "POST", body?: unknown) => {
@@ -325,6 +372,7 @@ function App() {
     ids.every((id) => current.includes(id)) ? current.filter((id) => !ids.includes(id)) : [...new Set([...current, ...ids])]);
 
   return (
+    <MotionConfig reducedMotion="user">
     <main className={`app-shell persona-${persona.toLowerCase()}`}>
       <header className="topbar">
         <a className="brand" href="#" aria-label="RTMI home">
@@ -341,14 +389,46 @@ function App() {
           <span>{connection === "connected" ? "CONNECTED" : connection === "connecting" ? "CONNECTING" : "OFFLINE"}</span>
           <span className="topbar-divider" />
           <span className={`foundry-indicator ${foundryStatus.toLowerCase()}`} />
-          <span>AI {foundryStatus === "Healthy" ? "READY" : foundryStatus.toUpperCase()}</span>
+          <span>AI {foundryStatus.toUpperCase()}</span>
         </div>
       </header>
 
       <div className="page-wrap">
+        <details className="health-dashboard">
+          <summary>
+            <Activity size={14} />
+            <span>SYSTEM HEALTH</span>
+            <HealthStatus service="API" value={apiStatus} />
+            <HealthStatus service="SIM" value={simulatorStatus} />
+            <HealthStatus service="FOUNDRY" value={foundryStatus} />
+          </summary>
+          <div className="health-details">
+            <div className="health-services">
+              <HealthRow service="API" value={apiStatus} detail="HTTP endpoint" />
+              <HealthRow service="Simulator" value={simulatorStatus} detail="Match process" />
+              <HealthRow
+                service="Foundry"
+                value={foundryStatus}
+                detail={foundryStatus === "Configured"
+                  ? "Endpoint configured; authentication and agent availability are not checked"
+                  : foundryStatus === "FallbackOnly"
+                    ? "Model calls disabled; labeled templates are active"
+                    : "Endpoint not configured"}
+              />
+            </div>
+            <div className="health-refresh">
+              <span>{healthUpdatedAt ? `Updated ${healthUpdatedAt.toLocaleTimeString()}` : "Waiting for health status"}</span>
+              <button className="icon-button" onClick={() => void refreshHealth()} disabled={healthRefreshing} aria-label="Refresh service health">
+                <RefreshCw size={14} className={healthRefreshing ? "spin" : ""} />
+              </button>
+            </div>
+            {healthError && <p className="health-error" role="status">{healthError}</p>}
+          </div>
+        </details>
         {error && (
           <div className="error-banner" role="alert">
             <ShieldAlert size={17} /><span>{error}</span>
+            <button className="retry-button" onClick={() => window.location.reload()}>RETRY</button>
             <button className="icon-button" onClick={() => setError("")} aria-label="Dismiss error"><X size={16} /></button>
           </div>
         )}
@@ -357,7 +437,7 @@ function App() {
           <div className="scorebug">
             <div className="score-team home-team"><span className="crest lions-crest">HL</span><span className="team-abbr">HAR</span><span className="team-name-full">Harare Lions</span></div>
             <div className="score-center">
-              <div className="score-numbers"><span>{state.home.score}</span><i>:</i><span>{state.away.score}</span></div>
+              <div className={`score-numbers ${scorePulse ? "score-pulse" : ""}`}><span>{state.home.score}</span><i>:</i><span>{state.away.score}</span></div>
               <div className="match-clock"><span className={`live-pulse ${isRunning ? "pulsing" : ""}`} />{fmtTime(state.minute)}<span className={`match-state ${isRunning ? "active" : ""}`}>{statusLabel}</span></div>
             </div>
             <div className="score-team away-team"><span className="team-name-full">Bulawayo Eagles</span><span className="team-abbr">BUL</span><span className="crest eagles-crest">BE</span></div>
@@ -414,8 +494,8 @@ function App() {
                       <XAxis dataKey="minute" tickLine={false} axisLine={false} tick={{ fill: "#686e69", fontSize: 10 }} tickFormatter={(value) => `${value}'`} />
                       <YAxis domain={[0, 1]} hide />
                       <Tooltip content={<MomentumTooltip />} />
-                      <Area type="monotone" dataKey="home" stroke="#c8ff4d" strokeWidth={2} fill="url(#homeMomentum)" isAnimationActive={false} />
-                      <Area type="monotone" dataKey="away" stroke="#5c8bff" strokeWidth={2} fill="url(#awayMomentum)" isAnimationActive={false} />
+                      <Area type="monotone" dataKey="home" stroke="#c8ff4d" strokeWidth={2} fill="url(#homeMomentum)" isAnimationActive={!prefersReducedMotion} animationDuration={350} />
+                      <Area type="monotone" dataKey="away" stroke="#5c8bff" strokeWidth={2} fill="url(#awayMomentum)" isAnimationActive={!prefersReducedMotion} animationDuration={350} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -484,7 +564,12 @@ function App() {
           <div className="dashboard-column side-column">
             <section className="panel referee-panel">
               <div className="panel-heading"><div><span className="eyebrow">VIDEO ASSISTANT REFEREE</span><h2>Review room</h2></div><span className="var-mark">VAR</span></div>
-              <div className="referee-upload" onClick={() => videoInputRef.current?.click()} onKeyDown={(event) => event.key === "Enter" && videoInputRef.current?.click()} role="button" tabIndex={0}>
+              <div className="referee-upload" onClick={() => videoInputRef.current?.click()} onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  videoInputRef.current?.click();
+                }
+              }} role="button" tabIndex={0}>
                 <input ref={videoInputRef} type="file" accept="video/*" hidden onChange={(event) => void handleClip(event.target.files?.[0])} />
                 <span className="upload-icon"><Video size={20} /></span>
                 <b>{clipName || "Drop a match clip"}</b>
@@ -538,7 +623,32 @@ function App() {
       </div>
       {selectedEvidence.length > 0 && <div className="evidence-toast"><span><BadgeCheck size={14} /> {selectedEvidence.length} EVENT RECEIPT{selectedEvidence.length === 1 ? "" : "S"} HIGHLIGHTED</span><button onClick={() => setSelectedEvidence([])}>CLEAR <X size={12} /></button></div>}
     </main>
+    </MotionConfig>
   );
+}
+
+function HealthStatus({ service, value }: { service: string; value: string }) {
+  return <span className={`health-pill ${healthTone(service, value)}`}><i />{service} {value.toUpperCase()}</span>;
+}
+
+function HealthRow({ service, value, detail }: { service: string; value: string; detail: string }) {
+  return <div className="health-row">
+    <HealthStatus service={service} value={value} />
+    <span>{detail}</span>
+  </div>;
+}
+
+function healthTone(service: string, value: string) {
+  if (service === "API") {
+    if (value === "Healthy") return "healthy";
+    if (value === "Unavailable") return "unhealthy";
+    if (value === "Unverified") return "fallback";
+  }
+  if (service === "Simulator") return value === "Unavailable" ? "unhealthy" : "neutral";
+  if (value === "Configured") return "configured";
+  if (value === "FallbackOnly") return "fallback";
+  if (value === "NotConfigured") return "unconfigured";
+  return "neutral";
 }
 
 function StatRow({ label, home, away, format = (value: number) => String(value) }: { label: string; home: number; away: number; format?: (value: number) => string }) {
