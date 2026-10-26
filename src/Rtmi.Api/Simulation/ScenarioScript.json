@@ -1,0 +1,18 @@
+{
+  "matchId": "m1",
+  "home": "Harare Lions",
+  "away": "Bulawayo Eagles",
+  "homeRoster": ["J. Moyo", "T. Zvobgo", "K. Sibanda", "D. Chikafu", "P. Mangwiro"],
+  "awayRoster": ["T. Ncube", "S. Dube", "M. Khumalo", "L. Ndlovu", "R. Moyo"],
+  "fillerSeed": 42,
+  "fillerEventsPerMinute": 2,
+  "keyBeats": [
+    { "minute": 12, "second": 30, "type": "Shot", "team": "AWAY", "player": "T. Ncube", "x": 78, "y": 44, "outcome": "Saved", "xg": 0.08, "isKey": true },
+    { "minute": 27, "second": 5, "type": "Corner", "team": "HOME", "player": "K. Sibanda", "x": 95, "y": 12, "isKey": false },
+    { "minute": 33, "second": 44, "type": "Goal", "team": "HOME", "player": "J. Moyo", "x": 88, "y": 38, "outcome": "Scored", "xg": 0.42, "isKey": true },
+    { "minute": 40, "second": 12, "type": "Foul", "team": "HOME", "player": "D. Chikafu", "x": 44, "y": 60, "outcome": "Yellow card", "isKey": true },
+    { "minute": 58, "second": 3, "type": "RedCard", "team": "AWAY", "player": "S. Dube", "x": 55, "y": 40, "outcome": "Sent off", "isKey": true },
+    { "minute": 70, "second": 21, "type": "Shot", "team": "HOME", "player": "T. Zvobgo", "x": 84, "y": 33, "outcome": "Saved", "xg": 0.14, "isKey": true },
+    { "minute": 88, "second": 57, "type": "Goal", "team": "AWAY", "player": "T. Ncube", "x": 81, "y": 42, "outcome": "Scored", "xg": 0.31, "isKey": true }
+  ]
+}
