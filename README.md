@@ -21,6 +21,22 @@ The project runs locally; it does not currently include a hosted judge demo. Liv
 
 Run these commands from the repository root.
 
+### Quick start
+
+From the repository root, run:
+
+```powershell
+.\start.ps1
+```
+
+The script checks for an Azure CLI sign-in and runs `az login` if needed, restores the .NET solution, installs the locked frontend dependencies on first run, then opens the API and dashboard in separate PowerShell windows. To sign in to a specific tenant, pass its tenant ID:
+
+```powershell
+.\start.ps1 -TenantId "<tenant-id>"
+```
+
+The API starts in Development mode. If Foundry is not configured in user-secrets, it uses the built-in fallback responses; configure a Foundry endpoint and agents as described in [AZURE_FOUNDRY_SETUP.md](./AZURE_FOUNDRY_SETUP.md) to enable live AI responses.
+
 ### 1. Restore, build, and test
 
 ```powershell

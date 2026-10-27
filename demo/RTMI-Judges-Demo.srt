@@ -1,0 +1,104 @@
+1
+00:00:00,000 --> 00:00:04,800
+Meet RTMI: a real-time match intelligence
+control room.
+
+2
+00:00:04,800 --> 00:00:13,866
+A deterministic football match becomes a live,
+personalized broadcast with explainable AI review.
+
+3
+00:00:13,866 --> 00:00:18,200
+Match events stream live over SignalR.
+
+4
+00:00:18,200 --> 00:00:23,000
+Start, pause, reset, or launch the repeatable
+Demo Run.
+
+5
+00:00:23,000 --> 00:00:27,976
+Stats, timeline, and momentum update as the
+game unfolds.
+
+6
+00:00:27,976 --> 00:00:31,500
+Choose Casual, Stats Nerd, Kid, or Tactician.
+
+7
+00:00:31,500 --> 00:00:36,100
+The same key moment can be narrated in a
+different voice,
+
+8
+00:00:36,100 --> 00:00:40,241
+while match facts stay grounded in the
+event feed.
+
+9
+00:00:40,241 --> 00:00:44,500
+Every insight comes with receipts.
+
+10
+00:00:44,500 --> 00:00:49,200
+Open Why This to inspect evidence IDs and
+trace them in the timeline.
+
+11
+00:00:49,200 --> 00:00:53,463
+Sources and confidence are visible; fallback
+output is labeled.
+
+12
+00:00:53,463 --> 00:00:58,800
+The analyst desk gathers tactics, stats, and
+fan perspectives in parallel.
+
+13
+00:00:58,800 --> 00:01:05,156
+A verdict agent synthesizes those takes into
+one evidence-backed conclusion.
+
+14
+00:01:05,156 --> 00:01:11,000
+Submit a short clip or one of four original
+synthetic scenarios.
+
+15
+00:01:11,000 --> 00:01:16,800
+The video referee examines sampled frames,
+returns a decision and evidence.
+
+16
+00:01:16,800 --> 00:01:21,400
+A human referee always makes the final call.
+
+17
+00:01:21,400 --> 00:01:26,642
+Fallback mode is honest when video was not
+analyzed.
+
+18
+00:01:26,642 --> 00:01:32,300
+Six specialized Microsoft Foundry agents power
+commentary, analysis, and review.
+
+19
+00:01:32,300 --> 00:01:37,500
+A .NET API connects those agents to a live
+React dashboard.
+
+20
+00:01:37,500 --> 00:01:43,593
+RTMI unites football, personalization,
+multi-agent AI, and explainability.
+
+21
+00:01:43,593 --> 00:01:47,000
+Every moment: personal, explainable,
+and reviewable.
+
+22
+00:01:47,000 --> 00:01:50,041
+RTMI. Thank you.

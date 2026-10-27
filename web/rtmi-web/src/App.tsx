@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity, ArrowDown, ArrowUpRight, BadgeCheck, BarChart3, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Clock3, Flame, Goal, LoaderCircle, Pause, Play, Radio, RefreshCw,
+  CircleHelp, Clock3, Flame, Goal, LoaderCircle, Moon, Pause, Play, Radio, RefreshCw, Sun,
   RotateCcw, ShieldAlert, Sparkles, Target, Users, Video, Wifi, WifiOff,
   X,
 } from "lucide-react";
@@ -55,6 +55,7 @@ const initialState: MatchState = {
 };
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, "") ?? "";
+type Theme = "dark" | "light" | "live";
 
 const fmtTime = (minute: number, second = 0) =>
   `${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
@@ -86,6 +87,8 @@ function App() {
   const [events, setEvents] = useState<MatchEvent[]>([]);
   const [insights, setInsights] = useState<Insight[]>([]);
   const [persona, setPersona] = useState<Persona>("Casual");
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [activeModal, setActiveModal] = useState<"desk" | "review" | null>(null);
   const [connection, setConnection] = useState<"connecting" | "connected" | "disconnected">("connecting");
   const [health, setHealth] = useState<HealthReport | null>(null);
   const [healthError, setHealthError] = useState("");
@@ -114,6 +117,15 @@ function App() {
   const chartRef = useRef<{ minute: number; home: number; away: number }[]>([]);
   const previousScore = useRef({ home: initialState.home.score, away: initialState.away.score });
   const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!activeModal) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActiveModal(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeModal]);
 
   const refreshHealth = useCallback(async () => {
     setHealthRefreshing(true);
@@ -373,7 +385,7 @@ function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-    <main className={`app-shell persona-${persona.toLowerCase()}`}>
+    <main className={`app-shell persona-${persona.toLowerCase()}`} data-theme={theme}>
       <header className="topbar">
         <a className="brand" href="#" aria-label="RTMI home">
           <span className="brand-mark"><Activity size={19} strokeWidth={2.6} /></span>
@@ -464,7 +476,19 @@ function App() {
               </button>
             ))}
           </div>
-          <span className="persona-live"><span className="mini-live-dot" />PERSONALIZED LIVE</span>
+          <div className="persona-actions">
+            <div className="theme-selector" role="group" aria-label="Color theme">
+              <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")} aria-pressed={theme === "dark"} title="Dark mode"><Moon size={15} /><span>DARK</span></button>
+              <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")} aria-pressed={theme === "light"} title="Light mode"><Sun size={15} /><span>LIGHT</span></button>
+              <button className={theme === "live" ? "active" : ""} onClick={() => setTheme("live")} aria-pressed={theme === "live"} title="Live stadium mode"><Radio size={15} /><span>LIVE</span></button>
+            </div>
+            <button className="modal-launch desk-launch" onClick={() => { setActiveModal("desk"); setDesk(null); void requestDesk(); }} disabled={Boolean(busy)}>
+              {busy === "desk" ? <LoaderCircle size={16} className="spin" /> : <BarChart3 size={16} />} ANALYST DESK
+            </button>
+            <button className="modal-launch review-launch" onClick={() => setActiveModal("review")}>
+              <ShieldAlert size={16} /> REVIEW ROOM VAR
+            </button>
+          </div>
         </section>
 
         <div className="dashboard-grid">
@@ -503,25 +527,6 @@ function App() {
               </div>
             </section>
 
-            <section className="panel timeline-panel">
-              <div className="panel-heading">
-                <div><span className="eyebrow">THE STORY SO FAR</span><h2>Match timeline</h2></div>
-                <div className="filter-tabs"><button className={eventFilter === "all" ? "active" : ""} onClick={() => setEventFilter("all")}>ALL</button><button className={eventFilter === "key" ? "active" : ""} onClick={() => setEventFilter("key")}>KEY MOMENTS</button></div>
-              </div>
-              <div className="timeline-list">
-                {!filteredEvents.length && <EmptyState icon={<Radio size={18} />} title="Waiting for kick-off" body="Start the match to see every moment appear here." />}
-                {filteredEvents.map((event) => (
-                  <button key={event.id} className={`timeline-item ${event.isKey ? "key-event" : ""} ${selectedEvidence.includes(event.id) ? "evidence-active" : ""}`} onClick={() => toggleEvidence([event.id])}>
-                    <span className="timeline-time">{fmtTime(event.minute, event.second)}</span>
-                    <span className={`timeline-icon ${event.team === "HOME" ? "home-event" : "away-event"} type-${event.type.toLowerCase()}`}>{iconFor(event.type)}</span>
-                    <span className="timeline-content"><b>{event.type === "MomentumShift" ? "Momentum swing" : `${readableType(event.type)}${event.outcome ? ` · ${event.outcome}` : ""}`}</b><small>{event.player || (event.team === "HOME" ? "Harare Lions" : "Bulawayo Eagles")}</small></span>
-                    <span className={`event-team-pill ${event.team === "HOME" ? "home-pill" : "away-pill"}`}>{event.team === "HOME" ? "HAR" : "BUL"}</span>
-                    <span className="event-id">{event.id}</span>
-                  </button>
-                ))}
-              </div>
-              {events.length > 18 && <div className="timeline-foot">Showing the latest {filteredEvents.length} of {events.length} events</div>}
-            </section>
           </div>
 
           <div className="dashboard-column middle-column">
@@ -548,65 +553,27 @@ function App() {
               </div>
             </section>
 
-            <section className="desk-callout">
-              <div className="desk-art"><BarChart3 size={21} /><span className="desk-orbit orbit-one" /><span className="desk-orbit orbit-two" /></div>
-              <div className="desk-copy"><span className="eyebrow">THREE VOICES. ONE VERDICT.</span><h3>Analyst desk</h3><p>Tactics, stats and fan perspective — debating the moment together.</p></div>
-              <button className="desk-button" onClick={() => void requestDesk()} disabled={Boolean(busy)}>{busy === "desk" ? <LoaderCircle size={15} className="spin" /> : <Users size={15} />} OPEN DESK</button>
-            </section>
-
-            {desk && <section className="panel desk-panel">
-              <div className="panel-heading"><div><span className="eyebrow">THE PANEL'S TAKE</span><h2>Analyst desk</h2></div><button className="icon-button" aria-label="Close analyst desk" onClick={() => setDesk(null)}><X size={16} /></button></div>
-              <div className="desk-takes">{desk.takes.map((take) => <article key={take.role} className="take-card"><div className="take-heading"><span className={`take-role role-${take.role.toLowerCase()}`}>{take.role}</span><span className={`source-badge ${take.source.toLowerCase() === "fallback" ? "fallback" : ""}`}>{take.source.toLowerCase() === "fallback" ? "TEMPLATE" : take.source}</span></div><p>{take.text}</p><button className="why-link" onClick={() => toggleEvidence(take.evidenceEventIds)}>{take.why} <span>WHY ↗</span></button></article>)}</div>
-              <div className="verdict-card"><div><BadgeCheck size={16} /><span>FINAL VERDICT</span><span className={`source-badge ${desk.verdict.source.toLowerCase() === "fallback" ? "fallback" : ""}`}>{desk.verdict.source.toLowerCase() === "fallback" ? "TEMPLATE" : desk.verdict.source}</span></div><p>{desk.verdict.text}</p><button className="why-link" onClick={() => toggleEvidence(desk.verdict.evidenceEventIds)}>{desk.verdict.why} <span>{Math.round(desk.verdict.confidence * 100)}% CONFIDENT</span></button></div>
-            </section>}
           </div>
 
           <div className="dashboard-column side-column">
-            <section className="panel referee-panel">
-              <div className="panel-heading"><div><span className="eyebrow">VIDEO ASSISTANT REFEREE</span><h2>Review room</h2></div><span className="var-mark">VAR</span></div>
-              <div className="referee-upload" onClick={() => videoInputRef.current?.click()} onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  videoInputRef.current?.click();
-                }
-              }} role="button" tabIndex={0}>
-                <input ref={videoInputRef} type="file" accept="video/*" hidden onChange={(event) => void handleClip(event.target.files?.[0])} />
-                <span className="upload-icon"><Video size={20} /></span>
-                <b>{clipName || "Drop a match clip"}</b>
-                <small>{clipName ? `${clipFrames.length} frames sampled · click to change` : "MP4, MOV · 5–15 seconds"}</small>
-                <span className="upload-action">{clipName ? "CHANGE CLIP" : "BROWSE FILES"} <ArrowUpRight size={12} /></span>
+            <section className="panel timeline-panel">
+              <div className="panel-heading">
+                <div><span className="eyebrow">THE STORY SO FAR</span><h2>Match timeline</h2></div>
+                <div className="filter-tabs"><button className={eventFilter === "all" ? "active" : ""} onClick={() => setEventFilter("all")}>ALL</button><button className={eventFilter === "key" ? "active" : ""} onClick={() => setEventFilter("key")}>KEY MOMENTS</button></div>
               </div>
-              <button className="sample-load-button" onClick={() => void loadSampleFrames()} disabled={sampleLoading || Boolean(busy)}>
-                {sampleLoading ? <LoaderCircle size={13} className="spin" /> : <Sparkles size={13} />}
-                {sampleLoading ? "ROLLING SCENARIO…" : "ROLL RANDOM SCENARIO"}
-              </button>
-              {clipFrames.length > 0 && <>
-                <div className="sample-frame-preview">
-                  <img src={clipFrames[frameIndex]} alt={`Synthetic match frame ${frameIndex + 1} of ${clipFrames.length}`} />
-                  <span className="sample-frame-counter">FRAME {String(frameIndex + 1).padStart(2, "0")} / {String(clipFrames.length).padStart(2, "0")}</span>
-                </div>
-                <div className="playback-controls">
-                  <button className="playback-step" onClick={() => { setIsPlaying(false); setFrameIndex((frameIndex - 1 + clipFrames.length) % clipFrames.length); }} aria-label="Previous frame"><ChevronLeft size={15} /></button>
-                  <button className="playback-toggle" onClick={() => setIsPlaying((playing) => !playing)} aria-label={isPlaying ? "Pause frame animation" : "Play frame animation"}>
-                    {isPlaying ? <Pause size={14} /> : <Play size={14} fill="currentColor" />}
-                    {isPlaying ? "PAUSE" : "PLAY ANIMATION"}
+              <div className="timeline-list">
+                {!filteredEvents.length && <EmptyState icon={<Radio size={18} />} title="Waiting for kick-off" body="Start the match to see every moment appear here." />}
+                {filteredEvents.map((event) => (
+                  <button key={event.id} className={`timeline-item ${event.isKey ? "key-event" : ""} ${selectedEvidence.includes(event.id) ? "evidence-active" : ""}`} onClick={() => toggleEvidence([event.id])}>
+                    <span className="timeline-time">{fmtTime(event.minute, event.second)}</span>
+                    <span className={`timeline-icon ${event.team === "HOME" ? "home-event" : "away-event"} type-${event.type.toLowerCase()}`}>{iconFor(event.type)}</span>
+                    <span className="timeline-content"><b>{event.type === "MomentumShift" ? "Momentum swing" : `${readableType(event.type)}${event.outcome ? ` · ${event.outcome}` : ""}`}</b><small>{event.player || (event.team === "HOME" ? "Harare Lions" : "Bulawayo Eagles")}</small></span>
+                    <span className={`event-team-pill ${event.team === "HOME" ? "home-pill" : "away-pill"}`}>{event.team === "HOME" ? "HAR" : "BUL"}</span>
+                    <span className="event-id">{event.id}</span>
                   </button>
-                  <button className="playback-step" onClick={() => { setIsPlaying(false); setFrameIndex((frameIndex + 1) % clipFrames.length); }} aria-label="Next frame"><ChevronRight size={15} /></button>
-                </div>
-                <div className="frame-strip">{clipFrames.map((frame, index) => <button className={index === frameIndex ? "active" : ""} onClick={() => { setIsPlaying(false); setFrameIndex(index); }} aria-label={`Show frame ${index + 1}`} key={index}><img src={frame} alt="" /></button>)}</div>
-                {syntheticDescription && <p className="sample-description">{syntheticDescription}</p>}
-              </>}
-              <div className="review-mode"><span>REVIEW MODE</span><div className="mode-switch"><button className={refereeMode === "Referee" ? "active" : ""} onClick={() => setRefereeMode("Referee")}>REFEREE</button><button className={refereeMode === "Analyst" ? "active" : ""} onClick={() => setRefereeMode("Analyst")}>ANALYST</button></div></div>
-              <button className="review-button" onClick={() => void requestReferee()} disabled={!clipFrames.length || Boolean(busy)}>{busy === "referee" ? <LoaderCircle size={15} className="spin" /> : <ShieldAlert size={15} />} SEND FOR REVIEW</button>
-              {!referee && <div className="review-note"><ShieldAlert size={14} /><span>AI-assisted review. A human referee makes the final call.</span></div>}
-              {referee && <div className="referee-result">
-                <div className="var-stamp">VAR <b>{readableLabel(referee.decision)}</b><span className={`source-badge ${referee.source.toLowerCase() === "fallback" ? "fallback" : ""}`}>{referee.source.toLowerCase() === "fallback" ? "TEMPLATE" : referee.source}</span></div>
-                <p>{referee.personaText || referee.text}</p>
-                <small>{referee.why}</small>
-                {referee.evidenceFrameIndexes.length > 0 && <div className="referee-evidence"><span>EVIDENCE FRAMES</span>{referee.evidenceFrameIndexes.map((index) => <button key={index} onClick={() => { setIsPlaying(false); setFrameIndex(index); }}>FRAME {String(index + 1).padStart(2, "0")}</button>)}</div>}
-                {referee.evidenceEventIds.length > 0 && <div className="referee-evidence"><span>EVENT RECEIPTS</span>{referee.evidenceEventIds.map((id) => <button key={id} onClick={() => toggleEvidence([id])}>{id}</button>)}</div>}
-                <span className="review-confidence">CONFIDENCE {Math.round(referee.confidence * 100)}%</span>
-              </div>}
+                ))}
+              </div>
+              {events.length > 18 && <div className="timeline-foot">Showing the latest {filteredEvents.length} of {events.length} events</div>}
             </section>
 
             <section className="panel match-insight-panel">
@@ -615,10 +582,85 @@ function App() {
               <div className="quick-stat"><span className="quick-stat-icon"><Users size={15} /></span><span>Possession leader</span><b>{state.home.possession > state.away.possession ? "HAR" : state.away.possession > state.home.possession ? "BUL" : "EVEN"}</b></div>
               <div className="quick-stat"><span className="quick-stat-icon"><Activity size={15} /></span><span>Pressure</span><b>{state.momentum.home > 0.58 ? "HAR ↑" : state.momentum.away > 0.58 ? "BUL ↑" : "BALANCED"}</b></div>
             </section>
-
-            <section className="receipt-note"><BadgeCheck size={15} /><div><b>Every insight has receipts.</b><span>Tap “Why this?” to see the match events behind each claim.</span></div></section>
+            <section className="receipt-note"><BadgeCheck size={17} /><div><b>Every insight has receipts.</b><span>Tap “Why this?” to see the match events behind each claim.</span></div></section>
           </div>
         </div>
+
+        {activeModal && (
+          <div className="modal-backdrop" onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setActiveModal(null);
+          }}>
+            <section className="fullscreen-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+              <header className="modal-header">
+                <div>
+                  <span className="eyebrow">{activeModal === "desk" ? "THREE VOICES. ONE VERDICT." : "VIDEO ASSISTANT REFEREE"}</span>
+                  <h2 id="modal-title">{activeModal === "desk" ? "Analyst desk" : "Review room VAR"}</h2>
+                </div>
+                <button className="icon-button modal-close" onClick={() => setActiveModal(null)} aria-label="Close dialog"><X size={20} /></button>
+              </header>
+              <div className="modal-body">
+                {activeModal === "desk" && (
+                  desk ? (
+                    <>
+                      <div className="desk-takes">{desk.takes.map((take) => <article key={take.role} className="take-card"><div className="take-heading"><span className={`take-role role-${take.role.toLowerCase()}`}>{take.role}</span><span className={`source-badge ${take.source.toLowerCase() === "fallback" ? "fallback" : ""}`}>{take.source.toLowerCase() === "fallback" ? "TEMPLATE" : take.source}</span></div><p>{take.text}</p><button className="why-link" onClick={() => toggleEvidence(take.evidenceEventIds)}>{take.why} <span>WHY ↗</span></button></article>)}</div>
+                      <div className="verdict-card"><div><BadgeCheck size={18} /><span>FINAL VERDICT</span><span className={`source-badge ${desk.verdict.source.toLowerCase() === "fallback" ? "fallback" : ""}`}>{desk.verdict.source.toLowerCase() === "fallback" ? "TEMPLATE" : desk.verdict.source}</span></div><p>{desk.verdict.text}</p><button className="why-link" onClick={() => toggleEvidence(desk.verdict.evidenceEventIds)}>{desk.verdict.why} <span>{Math.round(desk.verdict.confidence * 100)}% CONFIDENT</span></button></div>
+                    </>
+                  ) : (
+                    <EmptyState icon={<LoaderCircle size={22} className={busy === "desk" ? "spin" : ""} />} title={busy === "desk" ? "The analysts are conferring" : "No analyst report yet"} body={busy === "desk" ? "Tactics, stats and fan perspective are being brought together." : "Close this window and open the analyst desk to request a fresh report."} />
+                  )
+                )}
+                {activeModal === "review" && (
+                  <section className="panel referee-panel">
+                    <div className="panel-heading"><div><span className="eyebrow">ASSISTED VIDEO REVIEW</span><h2>Submit a match clip</h2></div><span className="var-mark">VAR</span></div>
+                    <div className="referee-upload" onClick={() => videoInputRef.current?.click()} onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        videoInputRef.current?.click();
+                      }
+                    }} role="button" tabIndex={0}>
+                      <input ref={videoInputRef} type="file" accept="video/*" hidden onChange={(event) => void handleClip(event.target.files?.[0])} />
+                      <span className="upload-icon"><Video size={20} /></span>
+                      <b>{clipName || "Drop a match clip"}</b>
+                      <small>{clipName ? `${clipFrames.length} frames sampled · click to change` : "MP4, MOV · 5–15 seconds"}</small>
+                      <span className="upload-action">{clipName ? "CHANGE CLIP" : "BROWSE FILES"} <ArrowUpRight size={12} /></span>
+                    </div>
+                    <button className="sample-load-button" onClick={() => void loadSampleFrames()} disabled={sampleLoading || Boolean(busy)}>
+                      {sampleLoading ? <LoaderCircle size={13} className="spin" /> : <Sparkles size={13} />}
+                      {sampleLoading ? "ROLLING SCENARIO…" : "ROLL RANDOM SCENARIO"}
+                    </button>
+                    {clipFrames.length > 0 && <>
+                      <div className="sample-frame-preview">
+                        <img src={clipFrames[frameIndex]} alt={`Synthetic match frame ${frameIndex + 1} of ${clipFrames.length}`} />
+                        <span className="sample-frame-counter">FRAME {String(frameIndex + 1).padStart(2, "0")} / {String(clipFrames.length).padStart(2, "0")}</span>
+                      </div>
+                      <div className="playback-controls">
+                        <button className="playback-step" onClick={() => { setIsPlaying(false); setFrameIndex((frameIndex - 1 + clipFrames.length) % clipFrames.length); }} aria-label="Previous frame"><ChevronLeft size={15} /></button>
+                        <button className="playback-toggle" onClick={() => setIsPlaying((playing) => !playing)} aria-label={isPlaying ? "Pause frame animation" : "Play frame animation"}>
+                          {isPlaying ? <Pause size={14} /> : <Play size={14} fill="currentColor" />}
+                          {isPlaying ? "PAUSE" : "PLAY ANIMATION"}
+                        </button>
+                        <button className="playback-step" onClick={() => { setIsPlaying(false); setFrameIndex((frameIndex + 1) % clipFrames.length); }} aria-label="Next frame"><ChevronRight size={15} /></button>
+                      </div>
+                      <div className="frame-strip">{clipFrames.map((frame, index) => <button className={index === frameIndex ? "active" : ""} onClick={() => { setIsPlaying(false); setFrameIndex(index); }} aria-label={`Show frame ${index + 1}`} key={index}><img src={frame} alt="" /></button>)}</div>
+                      {syntheticDescription && <p className="sample-description">{syntheticDescription}</p>}
+                    </>}
+                    <div className="review-mode"><span>REVIEW MODE</span><div className="mode-switch"><button className={refereeMode === "Referee" ? "active" : ""} onClick={() => setRefereeMode("Referee")}>REFEREE</button><button className={refereeMode === "Analyst" ? "active" : ""} onClick={() => setRefereeMode("Analyst")}>ANALYST</button></div></div>
+                    <button className="review-button" onClick={() => void requestReferee()} disabled={!clipFrames.length || Boolean(busy)}>{busy === "referee" ? <LoaderCircle size={15} className="spin" /> : <ShieldAlert size={15} />} SEND FOR REVIEW</button>
+                    {!referee && <div className="review-note"><ShieldAlert size={14} /><span>AI-assisted review. A human referee makes the final call.</span></div>}
+                    {referee && <div className="referee-result">
+                      <div className="var-stamp">VAR <b>{readableLabel(referee.decision)}</b><span className={`source-badge ${referee.source.toLowerCase() === "fallback" ? "fallback" : ""}`}>{referee.source.toLowerCase() === "fallback" ? "TEMPLATE" : referee.source}</span></div>
+                      <p>{referee.personaText || referee.text}</p>
+                      <small>{referee.why}</small>
+                      {referee.evidenceFrameIndexes.length > 0 && <div className="referee-evidence"><span>EVIDENCE FRAMES</span>{referee.evidenceFrameIndexes.map((index) => <button key={index} onClick={() => { setIsPlaying(false); setFrameIndex(index); }}>FRAME {String(index + 1).padStart(2, "0")}</button>)}</div>}
+                      {referee.evidenceEventIds.length > 0 && <div className="referee-evidence"><span>EVENT RECEIPTS</span>{referee.evidenceEventIds.map((id) => <button key={id} onClick={() => toggleEvidence([id])}>{id}</button>)}</div>}
+                      <span className="review-confidence">CONFIDENCE {Math.round(referee.confidence * 100)}%</span>
+                    </div>}
+                  </section>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
         <footer className="app-footer"><span>RTMI <b>·</b> REAL-TIME MATCH INTELLIGENCE</span><span><Wifi size={13} /> {connection === "connected" ? "SIGNALR STREAM ACTIVE" : <><WifiOff size={13} /> SIGNALR DISCONNECTED</>}</span><span>BUILT FOR THE BEAUTIFUL GAME <span className="footer-ball">●</span></span></footer>
       </div>
       {selectedEvidence.length > 0 && <div className="evidence-toast"><span><BadgeCheck size={14} /> {selectedEvidence.length} EVENT RECEIPT{selectedEvidence.length === 1 ? "" : "S"} HIGHLIGHTED</span><button onClick={() => setSelectedEvidence([])}>CLEAR <X size={12} /></button></div>}
