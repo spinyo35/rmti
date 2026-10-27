@@ -11,6 +11,12 @@ The project runs locally; it does not currently include a hosted judge demo. Liv
 - Foundry system instructions: [foundry-prompts](./foundry-prompts/README.md)
 - Four referee test scenarios and sample requests: [foundry-sample-test-prompts.md](./foundry-sample-test-prompts.md)
 
+## Judges demo video
+
+[Watch or download the RTMI Judges Demo with voice-over](./demo/RTMI-Judges-Demo_VO.mp4). The video includes timed narration and has no captions.
+
+The [screen-by-screen walkthrough](./demo/RTMI-Judges-Demo-Walkthrough.txt) describes the dashboard and demo screens, with approximate timestamps for the narration.
+
 ## Run locally (fallback-only)
 
 ### Prerequisites

@@ -1,0 +1,205 @@
+RTMI JUDGES DEMO
+Screen-by-Screen Walkthrough
+
+Video: RTMI-Judges-Demo.mp4
+Runtime: approximately 2 minutes 6 seconds
+Timestamps: video elapsed time (MM:SS); approximate narration placement aligned
+to the existing subtitle cues. A block may continue across a screen transition.
+
+[00:00-00:13] OVERVIEW
+
+RTMI is a real-time football match intelligence dashboard. It combines a
+simulated match feed, live match statistics, personalized commentary, an
+event timeline, and two AI-assisted review tools: the Analyst Desk and the
+Review Room VAR.
+
+[00:00-00:13]
+The recording uses the Live theme, which places the interface over a
+stadium-and-pitch background. The match shown is Harare Lions (HAR) against
+Bulawayo Eagles (BUL). The demo finishes 1-1.
+
+[00:00-00:53] MAIN DASHBOARD
+
+[00:00-00:13]
+The top header identifies the product as RTMI, Real-Time Match Intelligence,
+and labels the fixture as a demo match. Status indicators show the browser's
+connection to the match service and the AI/Foundry configuration state. In
+the recorded session, these indicators show Connected and AI Configured.
+
+[00:00-00:13, then updates during the match]
+System Health is the narrow status card below the header. It summarizes the
+API, simulator, and Foundry states. During the match, the recording shows API
+Healthy, simulator Running, and Foundry Configured. At full time, the
+simulator changes to Finished. These are service/configuration indicators;
+they are separate from the match result.
+
+[00:13-00:23, then updates during the match]
+The score card is directly below System Health. It displays the two team
+names and crests, the current score, match clock, and match status. The
+recording begins at 0-0 while the match is running, shows Harare take a 1-0
+lead, and ends at 1-1 at full time.
+
+[00:18-00:23]
+The controls beside the score provide:
+- A simulation-speed selector, shown at 120x in the recording.
+- Start Match or Pause, depending on match state.
+- Demo Run, which launches the repeatable scripted match.
+- Reset, which returns the match to its initial state.
+
+[00:31-00:40]
+Below the score, the broadcast selector offers four commentary personas:
+Casual, Stats Nerd, Kid, and Tactician. The selected persona changes the
+commentary voice; it does not change the underlying match events or stats.
+The theme selector offers Dark, Light, and Live. Live is selected in this
+recording.
+
+[00:53-01:05]
+The Analyst Desk and Review Room VAR buttons open full-screen panels. These
+are separate tools: the desk interprets match events and stats, while VAR
+reviews submitted video frames.
+
+[00:23-00:31] MATCH CENTRE
+
+[00:23-00:31]
+The Match Centre card compares Harare Lions and Bulawayo Eagles in four
+categories:
+- Possession percentage.
+- Total shots.
+- Expected goals (xG).
+- Fouls.
+
+Each row shows both teams' values and a horizontal comparison bar. The
+Momentum chart beneath it plots the home and away momentum values over match
+time, using lime for Harare and blue for Bulawayo. It is a changing match
+indicator, not a score prediction.
+
+[Visible as the match progresses; full-time values at approximately 00:55]
+The values update while the match runs. At full time, the dashboard shows:
+- Possession: Harare 59%, Bulawayo 41%.
+- Shots: Harare 14, Bulawayo 8.
+- Expected goals: Harare 1.47, Bulawayo 0.86.
+- Fouls: 6 each.
+
+[00:31-00:53] FROM THE BOOTH
+
+[00:31-00:40]
+The From the booth card contains the personalized live commentary feed. At
+the beginning of the recording it is still warming up; as key events arrive,
+commentary cards appear for the selected persona. A card identifies its
+content type (for example, Live Call), displays the commentary and time, and
+includes a Why This? control, a source label, and a confidence value.
+
+[As match events occur; example commentary visible around 00:31-00:49]
+One visible commentary explains that Harare scored through J. Moyo, giving
+the Lions a 1-0 lead, and cites a 0.42 xG chance. Another card describes
+Harare's early possession and momentum. These are generated commentary
+examples tied to the match feed.
+
+[00:40-00:53]
+Why This? expands the explanation and evidence IDs associated with an
+insight. The matching event can be found in the timeline, and selecting a
+receipt highlights it. Source labels distinguish Foundry-generated content
+from labeled template/fallback output. The confidence percentage belongs to
+that generated insight; it is not the probability of the match result.
+
+[00:23-00:55; continues updating through full time] MATCH TIMELINE
+
+[00:23-00:31]
+The Match timeline lists individual events with match time, event type,
+player (when available), and team abbreviation. The All and Key Moments
+filters control which events are displayed. Key events can include shots,
+goals, cards, and momentum swings; routine passes and other events also
+appear in All.
+
+[As the match progresses; full-time event visible at approximately 00:55]
+The timeline is scrollable and shows the latest events, with a count when
+there are more events than fit in the card. In the recording it includes the
+Harare goal, the later Bulawayo equalizer, and the full-time event. Event
+receipt IDs are visible on key entries and can be connected to the
+explanations in the booth and analyst cards.
+
+[Approximately 00:35-00:53] AT A GLANCE
+
+[Approximately 00:35-00:53]
+Under the timeline, At a glance condenses the current match into three
+quick-read values:
+- Shots for each team.
+- The current possession leader.
+- Which team currently has the stronger pressure/momentum indicator, or
+  whether play is balanced.
+
+It is a compact summary of the live data, not a separate source of match
+events. A receipt note beneath it reminds viewers that insight explanations
+can be traced to events.
+
+[00:53-01:05] ANALYST DESK
+
+[00:53-01:05]
+The Analyst Desk opens as a full-screen panel headed “Three voices. One
+verdict.” It presents three separate perspectives on a selected key moment:
+
+1. Tactics — discusses the late T. Ncube goal from a wide, advanced
+   position, citing coordinates and a prior saved shot as context.
+2. Stats — cites the goal's 0.31 xG at 88:57, the 1-1 score, and Harare's
+   lead in shots and possession.
+3. Fan — describes the late equalizer as a pivotal moment in a tight match.
+
+[Approximately 00:58-01:05]
+Each perspective has its own source label and a Why link for the evidence
+behind its statements. The cards are AI-generated interpretations rather
+than official match records.
+
+[Approximately 00:58-01:05]
+A separate Final Verdict card synthesizes the three takes. In this
+recording, it describes Ncube's 88:57 goal as a momentum-shifting moment,
+mentions the earlier saved shot and Harare's statistical advantage, and
+shows 87% confidence. This is the panel's generated interpretation. The
+scoreboard and timeline remain authoritative for the displayed match facts:
+the goal makes the score 1-1.
+
+[01:05-01:26] REVIEW ROOM VAR
+
+[01:05-01:11]
+The Review Room VAR is a full-screen video-review workspace. Its left side
+lets the user select a short video clip or load a random synthetic scenario.
+The recorded session first shows an away-attack scenario and later loads the
+synthetic away-offside-goal scenario.
+
+[01:05-01:16]
+The right side contains the sampled-frame player, current frame number,
+previous/next controls, Play Animation, and a strip of frame thumbnails.
+The scenario description below the thumbnails explains the intended setup:
+a blue away attacker is beyond the second-last defender when the pass is
+played, then scores past the gold-shirted home goalkeeper.
+
+[01:11-01:21]
+The Review Mode selector offers Referee and Analyst. Send for Review submits
+the sampled frames and selected mode. A completed result displays the
+decision, source, written explanation, evidence frames, linked event
+receipts, and confidence.
+
+[Approximately 01:16-01:26]
+For the offside-goal sample shown in this recording, the result is No Action,
+with Foundry as the displayed source and 40% confidence. Its explanation
+says the pictures do not make the precise moment of the pass and the
+attacker's position relative to the second-last defender clear enough to
+determine offside or a foul. The result lists frames 1 through 8 and event
+receipt evt_0194. It does not confirm the goal as offside.
+
+[01:16-01:26]
+The Review Room explicitly notes that this is AI-assisted review and that a
+human referee makes the final call. The displayed synthetic scenario is a
+test illustration, not real broadcast footage.
+
+[01:26-02:06] ENDING
+
+[01:26-01:43]
+The recording closes on the completed match and review experience. RTMI
+brings the live event stream, persona-based commentary, source and evidence
+traceability, multi-perspective analysis, and frame-based review together
+in one football control room.
+
+[01:43-02:06]
+The closing narration summarizes the product's combination of football,
+personalization, multi-agent AI, and explainability, then ends with the RTMI
+thank-you. The final frames complete the outro.
