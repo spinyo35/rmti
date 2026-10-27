@@ -288,7 +288,8 @@ public sealed class MatchSimulator : BackgroundService, IMatchControl
         Minute = minute,
         Type = type,
         Team = team,
-        Player = player
+        Player = player,
+        IsKey = type == EventType.KickOff
     };
 
     private MatchEvent CreateFillerEvent(int minute, Random random)

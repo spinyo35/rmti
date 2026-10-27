@@ -5,8 +5,9 @@
       <stop offset="1" stop-color="#173a37"/>
     </linearGradient>
     <linearGradient id="pitch" x2="0" y2="1">
-      <stop stop-color="#276b4a"/>
-      <stop offset="1" stop-color="#102c24"/>
+      <stop stop-color="#63d64e"/>
+      <stop offset=".48" stop-color="#32a943"/>
+      <stop offset="1" stop-color="#17713b"/>
     </linearGradient>
     <radialGradient id="glow">
       <stop stop-color="#dfffff" stop-opacity=".8"/>
@@ -18,19 +19,25 @@
       <circle cx="27" cy="3" r="1.7" fill="#f3d9a1" fill-opacity=".58"/>
       <circle cx="8" cy="20" r="1.6" fill="#9abbff" fill-opacity=".5"/>
     </pattern>
+    <clipPath id="pitchClip">
+      <path d="m0 660 960-136 960 136v420H0z"/>
+    </clipPath>
   </defs>
   <path fill="url(#sky)" d="M0 0h1920v1080H0z"/>
-  <ellipse cx="960" cy="410" rx="960" ry="400" fill="#183c3b" fill-opacity=".8"/>
-  <path fill="#101d22" d="M0 170 960 35l960 135v490L960 530 0 660z"/>
-  <path fill="#1e3032" d="M0 238 960 99l960 139v326L960 435 0 564z"/>
+  <ellipse cx="960" cy="410" rx="960" ry="400" fill="#285a54" fill-opacity=".8"/>
+  <path fill="#152d32" d="M0 170 960 35l960 135v490L960 530 0 660z"/>
+  <path fill="#315052" d="M0 238 960 99l960 139v326L960 435 0 564z"/>
   <path fill="url(#crowd)" d="M0 250 960 112l960 138v276L960 421 0 526z" opacity=".8"/>
-  <path fill="#0b171b" d="m0 548 960-132 960 132v120L960 524 0 668z"/>
+  <path fill="#162d2b" d="m0 548 960-132 960 132v120L960 524 0 668z"/>
   <path fill="url(#pitch)" d="m0 660 960-136 960 136v420H0z"/>
-  <path stroke="#d8f6df" stroke-opacity=".3" stroke-width="4" d="m0 728 960-136 960 136M0 1000h1920"/>
-  <path stroke="#d8f6df" stroke-opacity=".32" stroke-width="3" d="m960 592 0 488m-390-433 0 433m780-433v433"/>
-  <ellipse cx="960" cy="824" rx="122" ry="84" stroke="#d8f6df" stroke-opacity=".28" stroke-width="4"/>
-  <path stroke="#d8f6df" stroke-opacity=".24" stroke-width="3" d="m0 802 126 0 0 119H0m1920-119h-126v119h126"/>
-  <ellipse cx="125" cy="177" rx="220" ry="135" fill="url(#glow)" opacity=".55"/>
-  <ellipse cx="1795" cy="177" rx="220" ry="135" fill="url(#glow)" opacity=".55"/>
-  <path fill="#eafff5" fill-opacity=".72" d="M34 157h210v14H34zm14 25h180v10H48zm1622-25h210v14h-210zm14 25h180v10h-180z"/>
+  <g clip-path="url(#pitchClip)" opacity=".3">
+    <path fill="#a2ef55" d="M0 535h240v545H0zm480 0h240v545H480zm480 0h240v545H960zm480 0h240v545h-240zm480 0h240v545h-240z"/>
+  </g>
+  <path stroke="#e7ffe0" stroke-opacity=".6" stroke-width="4" d="m0 728 960-136 960 136M0 1000h1920"/>
+  <path stroke="#e7ffe0" stroke-opacity=".58" stroke-width="3" d="m960 592 0 488m-390-433 0 433m780-433v433"/>
+  <ellipse cx="960" cy="824" rx="122" ry="84" stroke="#e7ffe0" stroke-opacity=".52" stroke-width="4"/>
+  <path stroke="#e7ffe0" stroke-opacity=".48" stroke-width="3" d="m0 802 126 0 0 119H0m1920-119h-126v119h126"/>
+  <ellipse cx="125" cy="177" rx="220" ry="135" fill="url(#glow)" opacity=".82"/>
+  <ellipse cx="1795" cy="177" rx="220" ry="135" fill="url(#glow)" opacity=".82"/>
+  <path fill="#f3fff2" fill-opacity=".92" d="M34 157h210v14H34zm14 25h180v10H48zm1622-25h210v14h-210zm14 25h180v10h-180z"/>
 </svg>

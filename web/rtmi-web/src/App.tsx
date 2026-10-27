@@ -610,25 +610,28 @@ function App() {
                   )
                 )}
                 {activeModal === "review" && (
-                  <section className="panel referee-panel">
+                  <section className="panel referee-panel" aria-label="VAR review controls">
                     <div className="panel-heading"><div><span className="eyebrow">ASSISTED VIDEO REVIEW</span><h2>Submit a match clip</h2></div><span className="var-mark">VAR</span></div>
-                    <div className="referee-upload" onClick={() => videoInputRef.current?.click()} onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        videoInputRef.current?.click();
-                      }
-                    }} role="button" tabIndex={0}>
-                      <input ref={videoInputRef} type="file" accept="video/*" hidden onChange={(event) => void handleClip(event.target.files?.[0])} />
-                      <span className="upload-icon"><Video size={20} /></span>
-                      <b>{clipName || "Drop a match clip"}</b>
-                      <small>{clipName ? `${clipFrames.length} frames sampled · click to change` : "MP4, MOV · 5–15 seconds"}</small>
-                      <span className="upload-action">{clipName ? "CHANGE CLIP" : "BROWSE FILES"} <ArrowUpRight size={12} /></span>
+                    <div className="review-upload-column">
+                      <div className="referee-upload" onClick={() => videoInputRef.current?.click()} onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          videoInputRef.current?.click();
+                        }
+                      }} role="button" tabIndex={0}>
+                        <input ref={videoInputRef} type="file" accept="video/*" hidden onChange={(event) => void handleClip(event.target.files?.[0])} />
+                        <span className="upload-icon"><Video size={20} /></span>
+                        <b>{clipName || "Drop a match clip"}</b>
+                        <small>{clipName ? `${clipFrames.length} frames sampled · click to change` : "MP4, MOV · 5–15 seconds"}</small>
+                        <span className="upload-action">{clipName ? "CHANGE CLIP" : "BROWSE FILES"} <ArrowUpRight size={12} /></span>
+                      </div>
+                      <button className="sample-load-button" onClick={() => void loadSampleFrames()} disabled={sampleLoading || Boolean(busy)}>
+                        {sampleLoading ? <LoaderCircle size={13} className="spin" /> : <Sparkles size={13} />}
+                        {sampleLoading ? "ROLLING SCENARIO…" : "ROLL RANDOM SCENARIO"}
+                      </button>
                     </div>
-                    <button className="sample-load-button" onClick={() => void loadSampleFrames()} disabled={sampleLoading || Boolean(busy)}>
-                      {sampleLoading ? <LoaderCircle size={13} className="spin" /> : <Sparkles size={13} />}
-                      {sampleLoading ? "ROLLING SCENARIO…" : "ROLL RANDOM SCENARIO"}
-                    </button>
-                    {clipFrames.length > 0 && <>
+                    <div className="review-clip-column">
+                      {clipFrames.length > 0 ? <>
                       <div className="sample-frame-preview">
                         <img src={clipFrames[frameIndex]} alt={`Synthetic match frame ${frameIndex + 1} of ${clipFrames.length}`} />
                         <span className="sample-frame-counter">FRAME {String(frameIndex + 1).padStart(2, "0")} / {String(clipFrames.length).padStart(2, "0")}</span>
@@ -643,17 +646,22 @@ function App() {
                       </div>
                       <div className="frame-strip">{clipFrames.map((frame, index) => <button className={index === frameIndex ? "active" : ""} onClick={() => { setIsPlaying(false); setFrameIndex(index); }} aria-label={`Show frame ${index + 1}`} key={index}><img src={frame} alt="" /></button>)}</div>
                       {syntheticDescription && <p className="sample-description">{syntheticDescription}</p>}
-                    </>}
+                      </> : <EmptyState icon={<Video size={20} />} title="No clip loaded" body="Choose a match clip or roll a synthetic scenario to preview the evidence here." />}
+                    </div>
+                    <div className="review-action-column">
                     <div className="review-mode"><span>REVIEW MODE</span><div className="mode-switch"><button className={refereeMode === "Referee" ? "active" : ""} onClick={() => setRefereeMode("Referee")}>REFEREE</button><button className={refereeMode === "Analyst" ? "active" : ""} onClick={() => setRefereeMode("Analyst")}>ANALYST</button></div></div>
                     <button className="review-button" onClick={() => void requestReferee()} disabled={!clipFrames.length || Boolean(busy)}>{busy === "referee" ? <LoaderCircle size={15} className="spin" /> : <ShieldAlert size={15} />} SEND FOR REVIEW</button>
                     {!referee && <div className="review-note"><ShieldAlert size={14} /><span>AI-assisted review. A human referee makes the final call.</span></div>}
-                    {referee && <div className="referee-result">
+                    </div>
+                    {referee && <div className="review-result-column">
+                    <div className="referee-result">
                       <div className="var-stamp">VAR <b>{readableLabel(referee.decision)}</b><span className={`source-badge ${referee.source.toLowerCase() === "fallback" ? "fallback" : ""}`}>{referee.source.toLowerCase() === "fallback" ? "TEMPLATE" : referee.source}</span></div>
                       <p>{referee.personaText || referee.text}</p>
                       <small>{referee.why}</small>
                       {referee.evidenceFrameIndexes.length > 0 && <div className="referee-evidence"><span>EVIDENCE FRAMES</span>{referee.evidenceFrameIndexes.map((index) => <button key={index} onClick={() => { setIsPlaying(false); setFrameIndex(index); }}>FRAME {String(index + 1).padStart(2, "0")}</button>)}</div>}
                       {referee.evidenceEventIds.length > 0 && <div className="referee-evidence"><span>EVENT RECEIPTS</span>{referee.evidenceEventIds.map((id) => <button key={id} onClick={() => toggleEvidence([id])}>{id}</button>)}</div>}
                       <span className="review-confidence">CONFIDENCE {Math.round(referee.confidence * 100)}%</span>
+                    </div>
                     </div>}
                   </section>
                 )}

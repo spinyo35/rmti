@@ -44,10 +44,13 @@ public sealed class MatchSimulatorScriptTests
             new NullMatchBroadcaster(),
             NullLogger<MatchSimulator>.Instance);
 
-        var first = JsonSerializer.Serialize(simulator.BuildSchedule(demoOnly: true));
+        var firstSchedule = simulator.BuildSchedule(demoOnly: true);
+        var first = JsonSerializer.Serialize(firstSchedule);
         var second = JsonSerializer.Serialize(simulator.BuildSchedule(demoOnly: true));
 
         Assert.Equal(first, second);
+        Assert.Contains(firstSchedule, scheduled =>
+            scheduled.Evt.Type == EventType.KickOff && scheduled.Evt.IsKey);
     }
 
     private sealed class NullMatchBroadcaster : IMatchBroadcaster
